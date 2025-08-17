@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Summarizer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Meeting Summarizer</h1>
+        <p>Paste your meeting notes or call transcript below:</p>
+        <textarea id="transcriptInput" rows="10" placeholder="Paste your text here..."></textarea>
+        
+        <p>Enter a custom prompt (optional):</p>
+        <input type="text" id="promptInput" placeholder="e.g., Summarize for executives in bullet points">
+        
+        <button id="generateBtn">Generate Summary</button>
+
+        <div id="summarySection" style="display: none;">
+            <h2>Generated Summary</h2>
+            <div class="button-container">
+                <button id="editBtn">Edit</button>
+            </div>
+            <textarea id="summaryOutput" rows="15" disabled></textarea>
+            
+            <h3>Share via Email</h3>
+            <input type="text" id="recipientInput" placeholder="Enter recipient email addresses (comma-separated)">
+            <button id="shareBtn">Share Summary</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const transcript = document.getElementById('transcriptInput').value;
+            const prompt = document.getElementById('promptInput').value;
+            const summarySection = document.getElementById('summarySection');
+            const summaryOutput = document.getElementById('summaryOutput');
+
+            if (!transcript) {
+                alert('Please enter a transcript.');
+                return;
+            }
+
+            document.getElementById('generateBtn').innerText = 'Generating...';
+            
+            try {
+                const response = await fetch('/generate-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ transcript, prompt })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    summaryOutput.value = data.summary;
+                    summaryOutput.disabled = true; // Set to disabled by default
+                    summarySection.style.display = 'block';
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred.');
+            } finally {
+                document.getElementById('generateBtn').innerText = 'Generate Summary';
+            }
+        });
+
+        document.getElementById('editBtn').addEventListener('click', () => {
+            const summaryOutput = document.getElementById('summaryOutput');
+            const editBtn = document.getElementById('editBtn');
+
+            if (summaryOutput.disabled) {
+                summaryOutput.disabled = false;
+                editBtn.innerText = 'Save';
+                summaryOutput.focus();
+            } else {
+                summaryOutput.disabled = true;
+                editBtn.innerText = 'Edit';
+            }
+        });
+
+        document.getElementById('shareBtn').addEventListener('click', async () => {
+            const recipients = document.getElementById('recipientInput').value;
+            const summary = document.getElementById('summaryOutput').value;
+
+            if (!recipients || !summary) {
+                alert('Please enter recipient email(s) and make sure the summary is not empty.');
+                return;
+            }
+
+            document.getElementById('shareBtn').innerText = 'Sending...';
+
+            try {
+                const response = await fetch('/share-summary', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ recipients, summary })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred.');
+            } finally {
+                document.getElementById('shareBtn').innerText = 'Share Summary';
+            }
+        });
+    </script>
+</body>
+</html>
