@@ -1,4 +1,4 @@
-# AI Meeting Notes Summarizer & Sharer 📝
+# AI Meeting Notes Summarizer & Sharer
 
 This is a full-stack web application that uses an AI model to summarize meeting notes or call transcripts. The generated summary can be edited and then shared via email with multiple recipients.
 
